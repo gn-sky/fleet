@@ -1,13 +1,16 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
 import { IconField } from 'primeng/iconfield';
 import { InputIcon } from 'primeng/inputicon';
 import { InputText } from 'primeng/inputtext';
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-dashboard-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [TableModule, IconField, InputIcon, InputText],
+  imports: [TableModule, IconField, InputIcon, InputText, FormsModule, DialogModule, ButtonModule],
   template: `
     <section class="page-card hero-card">
       <p class="eyebrow">Dashboard</p>
@@ -47,6 +50,7 @@ import { InputText } from 'primeng/inputtext';
               <th pSortableColumn="city">City <p-sortIcon field="city" /></th>
               <th pSortableColumn="state">State <p-sortIcon field="state" /></th>
               <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+              <th style="width: 4rem"></th>
             </tr>
           </ng-template>
 
@@ -64,11 +68,43 @@ import { InputText } from 'primeng/inputtext';
                   {{ truck.status }}
                 </span>
               </td>
+              <td>
+                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="openEdit(truck)" />
+              </td>
             </tr>
           </ng-template>
         </p-table>
       </div>
     </div>
+
+    <!-- Edit Location Dialog -->
+    <p-dialog 
+      [header]="'Edit Location'" 
+      [visible]="editDialogVisible()" 
+      (visibleChange)="editDialogVisible.set($event)"
+      [modal]="true" 
+      [style]="{ width: '25rem' }">
+      
+      @if (editingTruck()) {
+        <span class="p-text-secondary block mb-6">Update location for {{ editingTruck()?.id }}</span>
+        
+        <div class="flex flex-col gap-4 py-4">
+          <div class="flex items-center gap-4">
+            <label for="city" class="font-semibold w-16">City</label>
+            <input pInputText id="city" [ngModel]="editCity()" (ngModelChange)="editCity.set($event)" class="flex-auto" autocomplete="off" />
+          </div>
+          <div class="flex items-center gap-4">
+            <label for="state" class="font-semibold w-16">State</label>
+            <input pInputText id="state" [ngModel]="editState()" (ngModelChange)="editState.set($event)" class="flex-auto" autocomplete="off" />
+          </div>
+        </div>
+        
+        <div class="flex justify-end gap-2 mt-4">
+          <p-button label="Cancel" severity="secondary" [text]="true" (onClick)="editDialogVisible.set(false)" />
+          <p-button label="Save" (onClick)="saveEdit()" />
+        </div>
+      }
+    </p-dialog>
   `,
   styles: `
     :host {
@@ -91,11 +127,22 @@ import { InputText } from 'primeng/inputtext';
     }
 
     .flex { display: flex; }
+    .flex-col { flex-direction: column; }
+    .items-center { align-items: center; }
+    .flex-auto { flex: 1 1 auto; width: 100%; }
     .justify-end { justify-content: flex-end; }
     .p-2 { padding: 0.5rem; }
     .pb-0 { padding-bottom: 0; }
     .p-4 { padding: 1.5rem; }
+    .py-4 { padding-top: 1rem; padding-bottom: 1rem; }
     .font-semibold { font-weight: 600; }
+    .w-16 { width: 4rem; }
+    .gap-2 { gap: 0.5rem; }
+    .gap-4 { gap: 1rem; }
+    .mt-4 { margin-top: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .block { display: block; }
+    .p-text-secondary { color: var(--text-muted); }
 
     .hero-card {
       min-height: 16rem;
@@ -172,5 +219,30 @@ export default class DashboardPageComponent {
       };
     })
   );
+
+  readonly editDialogVisible = signal(false);
+  readonly editingTruck = signal<any>(null);
+  
+  readonly editCity = signal('');
+  readonly editState = signal('');
+
+  openEdit(truck: any) {
+    this.editingTruck.set(truck);
+    this.editCity.set(truck.city);
+    this.editState.set(truck.state);
+    this.editDialogVisible.set(true);
+  }
+
+  saveEdit() {
+    const active = this.editingTruck();
+    if (active) {
+      this.trucks.update(list => list.map(t => 
+        t.id === active.id 
+          ? { ...t, city: this.editCity(), state: this.editState() }
+          : t
+      ));
+    }
+    this.editDialogVisible.set(false);
+  }
 }
 
