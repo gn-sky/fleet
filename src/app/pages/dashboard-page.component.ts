@@ -1,16 +1,74 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
+import { TableModule } from 'primeng/table';
+import { IconField } from 'primeng/iconfield';
+import { InputIcon } from 'primeng/inputicon';
+import { InputText } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-dashboard-page',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [TableModule, IconField, InputIcon, InputText],
   template: `
     <section class="page-card hero-card">
       <p class="eyebrow">Dashboard</p>
-      <h1>Navigation foundation for a standards-first web app.</h1>
+      <h1>Active Fleet Overview</h1>
       <p class="lede">
-        The shell is now routed, responsive, and ready for feature modules to grow behind the menu.
+        Real-time monitoring of your regional trucks and their current assignments.
       </p>
     </section>
+
+    <div class="grid-container">
+      <div class="card p-4">
+        <h2 class="section-title">Sample Fleet</h2>
+        
+        <p-table
+          #dt
+          [value]="trucks()"
+          [paginator]="true"
+          [rows]="5"
+          [rowsPerPageOptions]="[5, 10, 20]"
+          [globalFilterFields]="['id', 'model', 'city', 'state', 'status']"
+          [tableStyle]="{ 'min-width': '50rem' }"
+          styleClass="p-datatable-sm"
+        >
+          <ng-template #caption>
+            <div class="flex justify-end p-2 pb-0">
+              <p-iconfield>
+                <p-inputicon class="pi pi-search" />
+                <input pInputText type="text" (input)="dt.filterGlobal($any($event.target).value, 'contains')" placeholder="Global Search..." />
+              </p-iconfield>
+            </div>
+          </ng-template>
+
+          <ng-template #header>
+            <tr>
+              <th pSortableColumn="id">ID <p-sortIcon field="id" /></th>
+              <th pSortableColumn="model">Model <p-sortIcon field="model" /></th>
+              <th pSortableColumn="city">City <p-sortIcon field="city" /></th>
+              <th pSortableColumn="state">State <p-sortIcon field="state" /></th>
+              <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
+            </tr>
+          </ng-template>
+
+          <ng-template #body let-truck>
+            <tr>
+              <td class="font-semibold">{{ truck.id }}</td>
+              <td>{{ truck.model }}</td>
+              <td>{{ truck.city }}</td>
+              <td>{{ truck.state }}</td>
+              <td>
+                <span class="status-badge" 
+                      [class.status--active]="truck.status === 'In Transit'" 
+                      [class.status--idle]="truck.status === 'Idle'"
+                      [class.status--maint]="truck.status === 'Maintenance'">
+                  {{ truck.status }}
+                </span>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
   `,
   styles: `
     :host {
@@ -25,8 +83,23 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
       box-shadow: 0 18px 40px rgb(19 32 43 / 0.08);
     }
 
+    .card {
+        background: rgb(255 255 255 / 0.95);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        box-shadow: var(--shadow);
+    }
+
+    .flex { display: flex; }
+    .justify-end { justify-content: flex-end; }
+    .p-2 { padding: 0.5rem; }
+    .pb-0 { padding-bottom: 0; }
+    .p-4 { padding: 1.5rem; }
+    .font-semibold { font-weight: 600; }
+
     .hero-card {
-      min-height: 22rem;
+      min-height: 16rem;
+      margin-bottom: 2rem;
       background:
         radial-gradient(circle at top right, rgb(15 118 110 / 0.18), transparent 24%),
         linear-gradient(180deg, rgb(255 255 255 / 0.88), rgb(255 255 255 / 0.72));
@@ -34,7 +107,7 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
 
     .eyebrow {
       margin: 0 0 0.75rem;
-      color: #0f766e;
+      color: var(--accent);
       font-size: 0.8rem;
       font-weight: 700;
       letter-spacing: 0.14em;
@@ -51,10 +124,41 @@ import { ChangeDetectionStrategy, Component } from '@angular/core';
     .lede {
       max-width: 42rem;
       margin: 1rem 0 0;
-      color: #5d6c78;
+      color: var(--text-muted);
       font-size: 1.05rem;
       line-height: 1.6;
     }
+
+    .section-title {
+      font-size: 1.5rem;
+      margin: 0 0 1rem;
+      color: var(--text-strong);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status--active { background: rgb(15 118 110 / 0.12); color: #0b5e58; }
+    .status--idle { background: rgb(93 108 120 / 0.12); color: #3b464f; }
+    .status--maint { background: rgb(220 38 38 / 0.12); color: #991b1b; }
   `
 })
-export default class DashboardPageComponent {}
+export default class DashboardPageComponent {
+  readonly trucks = signal(
+    Array.from({ length: 42 }).map((_, i) => ({
+      id: `TRK-${1000 + i}`,
+      model: ['Cascadia', 'VNL 860', 'T680', '579', 'Anthem'][Math.floor(Math.random() * 5)],
+      city: ['Dallas', 'Atlanta', 'Denver', 'Chicago', 'Phoenix', 'Charlotte'][Math.floor(Math.random() * 6)],
+      state: ['TX', 'GA', 'CO', 'IL', 'AZ', 'NC'][Math.floor(Math.random() * 6)],
+      status: ['In Transit', 'Idle', 'Maintenance', 'In Transit'][Math.floor(Math.random() * 4)]
+    }))
+  );
+}
+
