@@ -152,13 +152,25 @@ import { InputText } from 'primeng/inputtext';
 })
 export default class DashboardPageComponent {
   readonly trucks = signal(
-    Array.from({ length: 42 }).map((_, i) => ({
-      id: `TRK-${1000 + i}`,
-      model: ['Cascadia', 'VNL 860', 'T680', '579', 'Anthem'][Math.floor(Math.random() * 5)],
-      city: ['Dallas', 'Atlanta', 'Denver', 'Chicago', 'Phoenix', 'Charlotte'][Math.floor(Math.random() * 6)],
-      state: ['TX', 'GA', 'CO', 'IL', 'AZ', 'NC'][Math.floor(Math.random() * 6)],
-      status: ['In Transit', 'Idle', 'Maintenance', 'In Transit'][Math.floor(Math.random() * 4)]
-    }))
+    Array.from({ length: 42 }).map((_, i) => {
+      const locations = [
+        { city: 'Dallas', state: 'TX' },
+        { city: 'Atlanta', state: 'GA' },
+        { city: 'Denver', state: 'CO' },
+        { city: 'Chicago', state: 'IL' },
+        { city: 'Phoenix', state: 'AZ' },
+        { city: 'Charlotte', state: 'NC' }
+      ];
+      const loc = locations[Math.floor(Math.random() * locations.length)];
+      
+      return {
+        id: `TRK-${1000 + i}`,
+        model: ['Cascadia', 'VNL 860', 'T680', '579', 'Anthem'][Math.floor(Math.random() * 5)],
+        city: loc.city,
+        state: loc.state,
+        status: ['In Transit', 'Idle', 'Maintenance', 'In Transit'][Math.floor(Math.random() * 4)]
+      };
+    })
   );
 }
 
