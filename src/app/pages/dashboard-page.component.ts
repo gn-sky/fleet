@@ -50,7 +50,7 @@ import { ButtonModule } from 'primeng/button';
               <th pSortableColumn="city">City <p-sortIcon field="city" /></th>
               <th pSortableColumn="state">State <p-sortIcon field="state" /></th>
               <th pSortableColumn="status">Status <p-sortIcon field="status" /></th>
-              <th style="width: 4rem"></th>
+              <th style="width: 6rem"></th>
             </tr>
           </ng-template>
 
@@ -69,7 +69,10 @@ import { ButtonModule } from 'primeng/button';
                 </span>
               </td>
               <td>
-                <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="openEdit(truck)" />
+                <div class="flex gap-2">
+                  <p-button icon="pi pi-pencil" [rounded]="true" [text]="true" severity="secondary" (onClick)="openEdit(truck)" />
+                  <p-button icon="pi pi-trash" [rounded]="true" [text]="true" severity="danger" (onClick)="deleteTruck(truck)" />
+                </div>
               </td>
             </tr>
           </ng-template>
@@ -243,6 +246,12 @@ export default class DashboardPageComponent {
       ));
     }
     this.editDialogVisible.set(false);
+  }
+
+  deleteTruck(truck: any) {
+    if (confirm(`Are you sure you want to remove ${truck.id} from the active fleet?`)) {
+      this.trucks.update(list => list.filter(t => t.id !== truck.id));
+    }
   }
 }
 
